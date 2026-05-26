@@ -1,93 +1,244 @@
 \documentclass[11pt,journal,onecolumn]{IEEEtran}
 
-\usepackage{geometry}
-\geometry{letterpaper, margin=1in}
+% --------------------------------------------------
+% PACKAGES
+% --------------------------------------------------
+\usepackage[a4paper,margin=1in]{geometry}
+
 \usepackage{graphicx}
 \usepackage{booktabs}
-\usepackage{hyperref}
+\usepackage{array}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{microtype}
 \usepackage{xcolor}
 \usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{hyperref}
 
+% --------------------------------------------------
+% HYPERLINK SETTINGS
+% --------------------------------------------------
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
-    filecolor=magenta,      
+    citecolor=blue,
+    filecolor=magenta,
     urlcolor=cyan,
     pdftitle={Multimodal Emotion Recognition on TESS},
     pdfpagemode=FullScreen,
 }
 
-\title{Multimodal Emotion Recognition on the TESS Dataset}
-\author{Aaron Roy}
+% --------------------------------------------------
+% SPACING + TYPOGRAPHY
+% --------------------------------------------------
+\setstretch{1.08}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+% Better table spacing
+\renewcommand{\arraystretch}{1.25}
+
+% Better caption spacing
+\captionsetup{
+    font=small,
+    labelfont=bf,
+    skip=8pt
+}
+
+% Section styling
+\titleformat{\section}
+{\large\bfseries}
+{\thesection.}{0.5em}{}
+
+\titleformat{\subsection}
+{\normalsize\bfseries}
+{\thesubsection}{0.5em}{}
+
+% --------------------------------------------------
+% TITLE
+% --------------------------------------------------
+\title{
+\vspace{-1cm}
+\textbf{Multimodal Emotion Recognition on the TESS Dataset}
+}
+
+\author{
+\textbf{Aaron Roy}
+}
+
 \date{\today}
 
+
+\renewcommand{\contentsname}{Content}
+
+% --------------------------------------------------
+% DOCUMENT
+% --------------------------------------------------
 \begin{document}
+
+% --------------------------------------------------
+% CONTENT / INDEX PAGE
+% --------------------------------------------------
 
 \maketitle
 
+\vspace{-1em}
+
+% --------------------------------------------------
+% ABSTRACT
+% --------------------------------------------------
 \begin{abstract}
+\noindent
 Human emotion recognition is an essential pillar in the development of intuitive and natural human-computer interaction (HCI) systems. However, relying on a single modality often introduces limitations, such as acoustic ambiguities in pure audio files or semantic sparsity in transcribed text. In this paper, we explore a multimodal framework for emotion classification using the Toronto Emotional Speech Set (TESS) dataset, evaluating three distinct pipeline variants: Speech-only, Text-only, and Multimodal Late Fusion. The Speech-only model relies on extracting 64-dimensional logarithmic Mel Spectrograms from 16 kHz resampled audio, which are sequentially modeled using a Bidirectional LSTM (BiLSTM) network to capture prosodic transitions (achieving 97.32\% classification accuracy). The Text-only baseline utilizes contextual embeddings extracted from the CLS token of a frozen pre-trained BERT transformer, highlighting the inherent limitation of carrier-phrase text structures which carry zero semantic emotional variance (yielding a near-random 13.48\% accuracy). To combine the strengths of both modalities, we implement a Late Fusion architecture that concatenates the 256-dimensional speech summary vector and the 768-dimensional text embedding. The resulting 1024-dimensional feature vector is passed to a classification head, yielding a state-of-the-art accuracy of 99.38\%. Our findings demonstrate that while the text transcripts lack direct emotional labels, they serve to resolve fine-grained acoustic confusions (e.g., distinguishing low-arousal sadness from disgust) by conditioning voice prosody on the literal identity of the spoken word.
 \end{abstract}
 
+\vspace{0.5em}
+
+\newpage
+\renewcommand{\contentsname}{Content}
+\tableofcontents
+\newpage
+
+% --------------------------------------------------
+% SECTION 1
+% --------------------------------------------------
 \section{Introduction}
-Emotion recognition from human conversation is a crucial challenge in human-computer interaction (HCI). While voice tone (speech prosody) carries significant acoustic cues, the literal words spoken (linguistic text context) provide critical constraints that resolve phonetic and acoustic ambiguities. In this project, we develop and compare three deep learning architectures: a Speech-only model, a Text-only model, and a Multimodal Fusion model combining both modalities.
 
+Emotion recognition from human conversation is a crucial challenge in Human--Computer Interaction (HCI). While voice tone (speech prosody) carries significant acoustic cues, the literal words spoken (linguistic text context) provide critical constraints that resolve phonetic and acoustic ambiguities.
+
+In this project, we develop and compare three deep learning architectures:
+\begin{itemize}
+    \item Speech-only model
+    \item Text-only model
+    \item Multimodal Fusion model combining both modalities
+\end{itemize}
+
+% --------------------------------------------------
+% SECTION 2
+% --------------------------------------------------
 \section{Architecture Decisions}
-The overall system is designed around five modular blocks: preprocessing, feature extraction, temporal/contextual modeling, feature fusion, and classification.
 
+The overall system is designed around five modular blocks:
+\begin{enumerate}
+    \item Preprocessing
+    \item Feature Extraction
+    \item Temporal / Contextual Modeling
+    \item Feature Fusion
+    \item Classification
+\end{enumerate}
+
+% --------------------------------------------------
 \subsection{Preprocessing}
+
 \begin{itemize}
-    \item \textbf{Speech Modality:} We use \texttt{torchaudio} to load raw audio files and ensure a standard 16 kHz sampling rate via resampling. Waveforms are padded or truncated to exactly 64,000 samples (4.0 seconds) to maintain consistent batch shapes.
-    \item \textbf{Text Modality:} Since the TESS dataset carrier phrases follow a strict folder structure and file naming convention (e.g., ``Say the word [word]''), we derive transcripts directly from the filenames. We tokenize these carrier phrases using the pre-trained \texttt{bert-base-uncased} tokenizer with a maximum length of 16 tokens.
+    \item \textbf{Speech Modality:}
+    We use \texttt{torchaudio} to load raw audio files and ensure a standard 16 kHz sampling rate via resampling. Waveforms are padded or truncated to exactly 64,000 samples (4 seconds) to maintain consistent batch shapes.
+    
+    \item \textbf{Text Modality:}
+    Since the TESS dataset carrier phrases follow a strict folder structure and naming convention (e.g., ``Say the word [word]''), transcripts are derived directly from filenames. These phrases are tokenized using the pre-trained \texttt{bert-base-uncased} tokenizer with a maximum sequence length of 16 tokens.
 \end{itemize}
 
+% --------------------------------------------------
 \subsection{Feature Extraction}
+
 \begin{itemize}
-    \item \textbf{Speech Features:} We extract Mel Spectrograms (64 mel bins, FFT size of 1024, hop length of 512) from the resampled audio waveform. Mel Spectrograms represent spectral energy on a logarithmic scale mimicking human auditory perception.
-    \item \textbf{Text Features:} We pass tokenized input IDs and attention masks through a pre-trained BERT model to extract dense contextual word embeddings.
+    \item \textbf{Speech Features:}
+    Mel Spectrograms are extracted using:
+    \begin{itemize}
+        \item 64 Mel bins
+        \item FFT size = 1024
+        \item Hop length = 512
+    \end{itemize}
+    
+    These features represent spectral energy on a logarithmic scale, closely mimicking human auditory perception.
+
+    \item \textbf{Text Features:}
+    Tokenized inputs are passed through a pre-trained BERT model to obtain dense contextual embeddings.
 \end{itemize}
 
+% --------------------------------------------------
 \subsection{Temporal / Contextual Modeling}
+
 \begin{itemize}
-    \item \textbf{Speech Modality:} We employ a \textbf{Bidirectional Long Short-Term Memory (BiLSTM)} network with 2 layers and 128 hidden units. The bidirectional structure allows the network to process sequential acoustic features from both past and future temporal context. The final hidden states of the forward and backward LSTMs are concatenated to form a 256-dimensional summary vector.
-    \item \textbf{Text Modality:} We extract the pooled output (corresponding to the \texttt{[CLS]} token) from the pre-trained \texttt{bert-base-uncased} model. The BERT weights are frozen during training to ensure stability and efficiency, producing a 768-dimensional contextual document embedding.
+    \item \textbf{Speech Modality:}
+    A \textbf{Bidirectional Long Short-Term Memory (BiLSTM)} network with:
+    \begin{itemize}
+        \item 2 layers
+        \item 128 hidden units
+    \end{itemize}
+    
+    is used to model temporal acoustic dependencies. The forward and backward hidden states are concatenated into a 256-dimensional representation.
+
+    \item \textbf{Text Modality:}
+    We extract the pooled output corresponding to the \texttt{[CLS]} token from \texttt{bert-base-uncased}. BERT weights are frozen during training, producing a stable 768-dimensional contextual embedding.
 \end{itemize}
 
+% --------------------------------------------------
 \subsection{Fusion Block}
-We implement a \textbf{Late Fusion} approach. The 256-dimensional representation from the Speech BiLSTM and the 768-dimensional embedding from BERT are concatenated directly to form a unified 1024-dimensional multimodal representation. Late fusion allows the speech and text pipelines to specialize in feature extraction independently before mapping combined high-level concepts to emotion labels.
 
+A \textbf{Late Fusion} strategy is implemented. The 256-dimensional speech representation is concatenated with the 768-dimensional BERT embedding to create a unified 1024-dimensional multimodal representation.
+
+Late fusion enables both modalities to independently specialize in feature extraction before combining higher-level semantic information for classification.
+
+% --------------------------------------------------
 \subsection{Classifier}
-Each pipeline variant (Speech, Text, and Fusion) terminates with a classifier head consisting of fully connected linear layers, Dropout regularization (rate = 0.3) to prevent overfitting, and a Softmax output layer representing the 7 emotion classes.
 
+Each pipeline variant ends with:
+\begin{itemize}
+    \item Fully connected linear layers
+    \item Dropout regularization ($p = 0.3$)
+    \item Softmax output layer
+\end{itemize}
+
+The classifier predicts one of the seven emotion classes.
+
+% --------------------------------------------------
+% SECTION 3
+% --------------------------------------------------
 \section{Experiments and Performance}
-We trained the models on an 80/20 train/test split of the TESS dataset across 10 epochs with a batch size of 32 using the Adam optimizer (learning rate = 0.001). The dataset contains 2,800 audio samples distributed across 7 emotion categories: \textit{angry, disgust, fear, happy, pleasant surprise, sad, and neutral}.
 
-Table~\ref{tab:overall_perf} outlines the overall test accuracy across the three pipeline variants. Table~\ref{tab:per_emotion_f1} lists the individual F1-scores per emotion.
+Models were trained using:
+\begin{itemize}
+    \item 80/20 train--test split
+    \item 10 epochs
+    \item Batch size = 32
+    \item Adam optimizer
+    \item Learning rate = 0.001
+\end{itemize}
 
-\begin{table}[h]
+The TESS dataset contains 2,800 audio samples distributed across seven emotion classes:
+\textit{angry, disgust, fear, happy, pleasant surprise, sad, and neutral}.
+
+% --------------------------------------------------
+\begin{table}[H]
 \centering
 \caption{Overall Model Performance Comparison}
 \label{tab:overall_perf}
-\begin{tabular}{lll}
+
+\begin{tabular}{>{\raggedright\arraybackslash}p{4cm} >{\raggedright\arraybackslash}p{5cm} c}
 \toprule
-\textbf{Model Variant} & \textbf{Modalities Used} & \textbf{Overall Test Accuracy} \\
+\textbf{Model Variant} & \textbf{Modalities Used} & \textbf{Accuracy} \\
 \midrule
-Speech-Only & Mel-Spectrograms & 97.32\% \\
+Speech-Only & Mel Spectrograms & 97.32\% \\
 Text-Only & BERT Embeddings & 13.48\% \\
-\textbf{Multimodal (Fusion)} & \textbf{Speech + Text} & \textbf{99.38\%} \\
+\textbf{Multimodal Fusion} & \textbf{Speech + Text} & \textbf{99.38\%} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{table}[h]
+% --------------------------------------------------
+\begin{table}[H]
 \centering
-\caption{Per-Emotion Classification F1-Score Breakdown}
+\caption{Per-Emotion Classification F1-Score}
 \label{tab:per_emotion_f1}
+
 \begin{tabular}{lccc}
 \toprule
-\textbf{Emotion} & \textbf{Speech-Only F1} & \textbf{Text-Only F1} & \textbf{Multimodal Fusion F1} \\
+\textbf{Emotion} & \textbf{Speech} & \textbf{Text} & \textbf{Fusion} \\
 \midrule
 Angry & 1.00 & 0.00 & 1.00 \\
 Disgust & 0.93 & 0.00 & 0.99 \\
@@ -100,82 +251,112 @@ Neutral & 0.99 & 0.10 & 1.00 \\
 \end{tabular}
 \end{table}
 
+% --------------------------------------------------
+% SECTION 4
+% --------------------------------------------------
 \section{Analysis}
 
+% --------------------------------------------------
 \subsection{Emotion Classification Difficulty}
-In the Speech-only model, \textit{fear}, \textit{angry}, and \textit{neutral} were the easiest emotions to classify, yielding F1-scores between 0.99 and 1.00. This is attributed to their distinct acoustic properties (e.g., elevated pitch and intensity for anger/fear; flat pitch and speech rate for neutral). 
 
-Conversely, the hardest emotions to classify solely by audio were \textit{disgust} (F1 = 0.93) and \textit{sad} (F1 = 0.94). These emotions possess low arousal profiles, lower voice intensity, and slower speech rates, causing spectral representation overlaps that make acoustic separation difficult.
+In the Speech-only model, \textit{fear}, \textit{angry}, and \textit{neutral} were the easiest emotions to classify, achieving F1-scores between 0.99 and 1.00. These emotions possess highly distinguishable acoustic characteristics such as elevated pitch, intensity, and stable speech rate patterns.
 
+The most challenging emotions were \textit{disgust} and \textit{sad}, which exhibit low-arousal acoustic profiles and overlapping spectral characteristics.
+
+% --------------------------------------------------
 \subsection{The Value of Modality Fusion}
-The Text-only model performs at 13.48\%, which is equivalent to random guessing over 7 classes. This is mathematically expected: because the TESS transcripts are identical carrier phrases (``Say the word [word]''), the text contains absolutely no semantic emotional cues. 
 
-However, late fusion improves overall accuracy from 97.32\% (Speech-only) to \textbf{99.38\%}. While the text itself contains no emotional valence, the BERT embedding informs the model of the \textit{exact identity} of the target word spoken. The fusion network learns to evaluate acoustic variations conditioned on the specific phonetic structure of the word being spoken, eliminating acoustic ambiguities.
+The Text-only model achieved only 13.48\% accuracy, equivalent to random guessing across seven classes. This occurs because the transcripts contain nearly identical carrier phrases and therefore provide minimal emotional semantics.
 
+However, multimodal late fusion increased performance from 97.32\% to \textbf{99.38\%}. Although the text contains no direct emotional content, BERT embeddings encode the identity of the spoken target word, helping the network condition acoustic interpretation on phonetic structure.
+
+% --------------------------------------------------
 \subsection{Error Analysis and Failure Cases}
+
 \begin{itemize}
-    \item \textbf{Text-Only Failures:} The model suffers from complete classification collapse, predicting \textit{pleasant surprise} or \textit{neutral} for almost all test samples due to a lack of emotional features in the carrier phrase transcripts.
-    \item \textbf{Speech-Only Confusions:} The majority of confusion occurs between \textit{disgust} and \textit{sadness}. Because both are low-intensity, negative-valence emotions, their acoustic Mel-spectrogram profiles are highly similar. Late fusion resolves this confusion by introducing targets vocabulary context.
+    \item \textbf{Text-Only Failures:}
+    The model collapses toward predicting dominant classes such as \textit{pleasant surprise} and \textit{neutral}, due to the lack of emotionally informative text signals.
+
+    \item \textbf{Speech-Only Confusions:}
+    Most confusion occurs between \textit{disgust} and \textit{sadness}, since both share similar low-energy acoustic signatures.
 \end{itemize}
 
+% --------------------------------------------------
 \subsection{Cluster Separability Visualization}
-We generated t-SNE scatter plots mapping the high-dimensional feature vectors into a 2D space to visualize the learned representations across different stages of the model:
+
+t-SNE visualizations were generated to project high-dimensional embeddings into 2D space.
+
 \begin{itemize}
-    \item \textbf{Speech Temporal Modeling} (Figure~\ref{fig:speech_tsne}): Features extracted from the BiLSTM network demonstrate clear spatial separation, indicating successful representation learning.
-    \item \textbf{Text Contextual Modeling} (Figure~\ref{fig:text_tsne}): Features extracted from BERT form a single overlapping cluster, confirming a lack of intrinsic emotional differentiators.
-    \item \textbf{Multimodal Fusion} (Figure~\ref{fig:fusion_tsne}): Features from the fusion layer show extremely tight, separated, and distinct clusters for all 7 emotions, correlating with the near-100\% classification accuracy.
+    \item \textbf{Speech Temporal Modeling:}
+    BiLSTM features demonstrate strong cluster separation.
+
+    \item \textbf{Text Contextual Modeling:}
+    BERT embeddings form overlapping clusters with poor separability.
+
+    \item \textbf{Multimodal Fusion:}
+    Fusion embeddings form highly compact and separable emotion clusters.
 \end{itemize}
 
-\begin{figure}[htbp]
+% --------------------------------------------------
+\begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{speech_tsne.png}
         \caption{Speech t-SNE}
-        \label{fig:speech_tsne}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{text_tsne.png}
         \caption{Text t-SNE}
-        \label{fig:text_tsne}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fusion_tsne.png}
         \caption{Fusion t-SNE}
-        \label{fig:fusion_tsne}
     \end{subfigure}
-    \caption{t-SNE Separability Visualizations for each Modality}
+
+    \caption{t-SNE Separability Visualizations}
     \label{fig:tsne_plots}
 \end{figure}
 
-\begin{figure}[htbp]
+% --------------------------------------------------
+\begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.32\textwidth}
+
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{speech_confusion_matrix.png}
-        \caption{Speech Confusion Matrix}
-        \label{fig:speech_cm}
+        \caption{Speech}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{text_confusion_matrix.png}
-        \caption{Text Confusion Matrix}
-        \label{fig:text_cm}
+        \caption{Text}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.32\textwidth}
+    \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fusion_confusion_matrix.png}
-        \caption{Fusion Confusion Matrix}
-        \label{fig:fusion_cm}
+        \caption{Fusion}
     \end{subfigure}
-    \caption{Confusion Matrices for individual Modalities and Fusion model}
+
+    \caption{Confusion Matrices for all Pipeline Variants}
     \label{fig:confusion_matrices}
 \end{figure}
 
+% --------------------------------------------------
+% SECTION 5
+% --------------------------------------------------
+\section{Conclusion}
+
+This work demonstrates that multimodal learning substantially improves emotion recognition performance on the TESS dataset. While acoustic modeling alone achieves strong performance, integrating contextual textual embeddings further reduces ambiguity and enhances class separability.
+
+The fusion architecture achieved a final accuracy of \textbf{99.38\%}, validating the effectiveness of combining temporal acoustic modeling with contextual language representations.
+
+% --------------------------------------------------
 \end{document}
