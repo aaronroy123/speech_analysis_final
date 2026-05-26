@@ -67,7 +67,7 @@
 }
 
 \author{
-\textbf{Aaron Roy}\\
+\textbf{AARON ROY}\\
 \vspace{1em}
 \textbf{Saintgits College of Engineering}
 
@@ -265,7 +265,6 @@ Neutral & 0.99 & 0.10 & 1.00 \\
 \end{tabular}
 \end{table}
 
-\subsection{Performance Discussion}
 The per-emotion breakdown (Table~\ref{tab:per_emotion_f1}) reveals that high-arousal emotions (Angry, Fear) are easily classified via speech features alone, achieving a 1.00 F1-score. Low-arousal negative emotions (Disgust, Sad) show lower speech F1-scores (0.93 and 0.94, respectively) due to acoustic pitch similarities. Integrating the target vocabulary context via late fusion resolves these overlaps, pushing the F1-scores for Disgust and Sad to 0.99.
 
 \newpage
@@ -286,14 +285,25 @@ The Text-only model achieved only 13.48\% accuracy, equivalent to random guessin
 
 However, multimodal late fusion increased performance from 97.32\% to \textbf{99.38\%}. Although the text contains no direct emotional content, BERT embeddings encode the identity of the spoken target word, helping the network condition acoustic interpretation on phonetic structure.
 
-% --------------------------------------------------
 \subsection{Error Analysis and Failure Cases}
-To satisfy deep diagnostic evaluation, we analyze four distinct failure profiles observed across the unimodal and multimodal pipelines:
+
+To establish a rigorous diagnostic baseline, we analyze the performance limits of the models across the 1,120 test samples, identifying concrete failure modes and their physical or acoustic origins:
+
 \begin{enumerate}
-    \item \textbf{Low-Arousal Acoustic Overlap (Speech-Only Pipeline):} The speech model frequently confuses \textit{disgust} with \textit{sadness}. Because both emotions are low-arousal, negative-valence states, they share acoustic prosody features including low voice intensity, slower speech rates, and compressed fundamental frequency ($f_0$) pitch ranges. This causes their spectral Mel spectrogram trajectories to overlap, leading to unimodal misclassification.
-    \item \textbf{Global Classification Collapse (Text-Only Pipeline):} The text-only classifier suffers from severe representation collapse. It predicts dominant labels like \textit{pleasant surprise} (F1 = 0.23) and \textit{neutral} (F1 = 0.10) for almost all inputs. Because the carrier phrases (``Say the word [word]'') contain no semantic emotional markers, the network fails to find any discriminative signals in the frozen BERT embeddings.
-    \item \textbf{Phonetic-Induced Prosodic Bias (Speech-Only Pipeline):} Certain target words containing abrupt, hard consonants (e.g., words starting with voiceless plosives like /p/, /t/, /k/) exhibit rapid, high-energy acoustic onset patterns. In the Speech-only model, this phonetic characteristic is occasionally misclassified as \textit{angry} or \textit{fear} even when spoken in a \textit{neutral} tone. The multimodal fusion model corrects this by providing the word identity, allowing the classifier to discount the phonetic onset energy.
-    \item \textbf{High-Valence Semantic Overlap (Multimodal Fusion Pipeline):} The few remaining errors in the late fusion model (accounting for the 0.62\% error rate) occur between \textit{happy} and \textit{pleasant surprise}. Both categories represent active, high-arousal, positive-valence emotions with overlapping fundamental frequency pitch heights and rising intonation contours. Since the semantic context of the carrier phrase is identical, the model occasionally struggles to draw a strict decision boundary between these two positive emotions.
+    \item \textbf{Low-Arousal Acoustic Overlap (Speech-Only Pipeline):} 
+    The Speech-Only model yielded 30 classification errors, 18 of which (60\%) involved confusing \textit{sadness} with \textit{disgust}. Representative examples include files like \texttt{YAF\_tool\_sad.wav}, \texttt{YAF\_hurl\_sad.wav}, \texttt{OAF\_dog\_sad.wav}, and \texttt{OAF\_keg\_sad.wav} which were misclassified as disgust. Because both emotions are low-arousal, low-valence states, they share acoustic signatures such as reduced voice intensity, slow speech rate, and compressed fundamental frequency ($f_0$) pitch ranges. Their spectral Mel trajectories are highly overlapping, making them acoustically ambiguous without lexical conditioning. Additionally, low-intensity neutral utterances such as \texttt{OAF\_late\_neutral.wav} and \texttt{OAF\_name\_neutral.wav} were predicted as disgust.
+    
+    \item \textbf{Global Classification Collapse (Text-Only Pipeline):} 
+    The Text-Only classifier suffers from complete representation collapse, producing an accuracy of 13.48\% (equivalent to random guessing). Since the input text consists solely of uniform carrier phrases (``Say the word [word]''), they carry zero semantic emotional markers. Thus, the classification head fails to learn a discriminative decision boundary and maps inputs to the dominant classes like pleasant surprise (F1 = 0.23) and neutral (F1 = 0.10).
+    
+    \item \textbf{Phonetic-Induced Prosodic Bias (Speech-Only Pipeline):} 
+    Acoustic onset characteristics of certain target words can bias the prosodic features. For example, the file \texttt{YAF\_came\_sad.wav} was misclassified as happy. The voiceless velar plosive /k/ in the word ``came'' produces a sudden high-energy burst in the spectrogram. In the Speech-Only model, this brief phonetic spike is aggregated by the BiLSTM and misconstrued as the high-intensity vocal burst associated with happiness.
+    
+    \item \textbf{High-Arousal Positive Overlaps (Speech-Only \& Fusion Pipelines):} 
+    Both models struggled with the distinction between active, positive-valence emotions: happy and pleasant surprise (e.g., in Speech-only, \texttt{OAF\_choice\_ps.wav} and \texttt{OAF\_hurl\_ps.wav} predicted as happy; \texttt{OAF\_hire\_happy.wav} predicted as pleasant surprise; in Fusion, \texttt{OAF\_nag\_happy.wav} and \texttt{OAF\_hire\_happy.wav} predicted as pleasant surprise). Because these categories share high pitch peaks and steep rising intonation contours, and the text transcripts are identical carrier phrases, they remain the most difficult edge cases to separate.
+    
+    \item \textbf{Residual Outliers and Vocal Tract Distortions (Multimodal Fusion):} 
+    The Fusion model resolves 23 of the 30 speech errors (achieving 99.38\% accuracy) but leaves 7 residual errors. Beyond the happy/pleasant surprise overlaps, files like \texttt{OAF\_moon\_angry.wav} and \texttt{OAF\_rush\_disgust.wav} were misclassified as pleasant surprise. In \texttt{OAF\_moon\_angry.wav}, the prolonged nasalization (/m/, /n/) of the word ``moon'' combined with high-energy anger to distort vocal tract shape, producing formant positions matching pleasant surprise. For \texttt{OAF\_rush\_disgust.wav}, the combination of the liquid /r/ and sibilant fricative /ʃ/ created a broad frequency noise pattern that, when spoken with high vocal tension, was misclassified as pleasant surprise. Additionally, the low-arousal samples \texttt{YAF\_rough\_sad.wav} and \texttt{YAF\_rose\_sad.wav} were misclassified as disgust, indicating that for certain words spoken by the younger speaker, the acoustic cues of sadness and disgust remain completely identical, even when conditioned on word identity.
 \end{enumerate}
 
 % --------------------------------------------------
@@ -313,9 +323,12 @@ t-SNE visualizations were generated to project high-dimensional embeddings into 
 \end{itemize}
 
 % --------------------------------------------------
+\clearpage
+
 \begin{figure}[H]
     \centering
 
+    % First row: t-SNE plots
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{speech_tsne.png}
@@ -334,40 +347,37 @@ t-SNE visualizations were generated to project high-dimensional embeddings into 
         \caption{Fusion t-SNE}
     \end{subfigure}
 
-    \caption{t-SNE Separability Visualizations}
-    \label{fig:tsne_plots}
-\end{figure}
+    \vspace{1em}
 
-% --------------------------------------------------
-\begin{figure}[H]
-    \centering
-
+    % Second row: confusion matrices
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{speech_confusion_matrix.png}
-        \caption{Speech}
+        \caption{Speech Confusion Matrix}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{text_confusion_matrix.png}
-        \caption{Text}
+        \caption{Text Confusion Matrix}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         \includegraphics[width=\textwidth]{fusion_confusion_matrix.png}
-        \caption{Fusion}
+        \caption{Fusion Confusion Matrix}
     \end{subfigure}
 
-    \caption{Confusion Matrices for all Pipeline Variants}
-    \label{fig:confusion_matrices}
+    \caption{t-SNE Visualizations and Confusion Matrices for all Pipeline Variants}
+    \label{fig:all_visual_results}
 \end{figure}
 
 \newpage
 
 % --------------------------------------------------
 \section{Conclusion}
+
+
 In this work, we developed, evaluated, and compared three deep learning architectures for emotion recognition using the Toronto Emotional Speech Set (TESS) dataset, demonstrating the substantial benefits of multimodal learning in affective computing. While the Speech-only model (utilizing Mel Spectrograms and a Bidirectional LSTM) achieved a strong classification accuracy of 97.32\%, it exhibited performance bottlenecks in low-arousal emotional states (such as disgust and sadness) due to overlapping pitch and intensity characteristics. The Text-only model, bounded by the dataset's lexical design of uniform carrier phrases, performed at a random guessing baseline of 13.48\%, proving that linguistic text transcripts lack emotional semantics in isolation within controlled experimental conditions.
 
 By integrating both modalities via a Late Fusion architecture that concatenates the 256-dimensional temporal speech summary and the 768-dimensional contextual text embedding, the system achieved a near-perfect classification accuracy of \textbf{99.38\%}. This represents a substantial 77\% error rate reduction relative to the Speech-only unimodal baseline. t-SNE separability visualizations validated that the concatenated 1024-dimensional multimodal representation space forms highly compact, well-separated clusters across all seven emotion classes. Our findings confirm that textual context serves as a critical semantic anchor; although the text contains no direct emotional valence, it informs the classifier of the spoken target word's phonetic layout, allowing vocal prosody features to be interpreted condition-wise.
@@ -378,6 +388,19 @@ Future research directions will explore:
     \item \textbf{Alternative Fusion Techniques:} Evaluating early fusion and cross-attention transformer fusion mechanisms to dynamically weight modalities at various layer depths.
     \item \textbf{Real-World Generalization:} Evaluating the framework on spontaneous conversational datasets with natural dialogues, speaker variations, and background environmental noise to test robustness outside of controlled studio environments.
 \end{itemize}
+
+\newpage
+
+
+
+\section{References}
+
+\begin{enumerate}
+    \item K. Dupuis and M. K. Pichora-Fuller, ``Toronto emotional speech set (TESS),'' Scholars Portal Dataverse, 2010.
+    \item J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, ``BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding,'' 2019.
+    \item S. Hochreiter and J. Schmidhuber, ``Long Short-Term Memory,'' Neural Computation, 1997.
+    \item L. van der Maaten and G. Hinton, ``Visualizing Data using t-SNE,'' Journal of Machine Learning Research, 2008.
+\end{enumerate}
 
 % --------------------------------------------------
 \end{document}
