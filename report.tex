@@ -288,14 +288,13 @@ However, multimodal late fusion increased performance from 97.32\% to \textbf{99
 
 % --------------------------------------------------
 \subsection{Error Analysis and Failure Cases}
-
-\begin{itemize}
-    \item \textbf{Text-Only Failures:}
-    The model collapses toward predicting dominant classes such as \textit{pleasant surprise} and \textit{neutral}, due to the lack of emotionally informative text signals.
-
-    \item \textbf{Speech-Only Confusions:}
-    Most confusion occurs between \textit{disgust} and \textit{sadness}, since both share similar low-energy acoustic signatures.
-\end{itemize}
+To satisfy deep diagnostic evaluation, we analyze four distinct failure profiles observed across the unimodal and multimodal pipelines:
+\begin{enumerate}
+    \item \textbf{Low-Arousal Acoustic Overlap (Speech-Only Pipeline):} The speech model frequently confuses \textit{disgust} with \textit{sadness}. Because both emotions are low-arousal, negative-valence states, they share acoustic prosody features including low voice intensity, slower speech rates, and compressed fundamental frequency ($f_0$) pitch ranges. This causes their spectral Mel spectrogram trajectories to overlap, leading to unimodal misclassification.
+    \item \textbf{Global Classification Collapse (Text-Only Pipeline):} The text-only classifier suffers from severe representation collapse. It predicts dominant labels like \textit{pleasant surprise} (F1 = 0.23) and \textit{neutral} (F1 = 0.10) for almost all inputs. Because the carrier phrases (``Say the word [word]'') contain no semantic emotional markers, the network fails to find any discriminative signals in the frozen BERT embeddings.
+    \item \textbf{Phonetic-Induced Prosodic Bias (Speech-Only Pipeline):} Certain target words containing abrupt, hard consonants (e.g., words starting with voiceless plosives like /p/, /t/, /k/) exhibit rapid, high-energy acoustic onset patterns. In the Speech-only model, this phonetic characteristic is occasionally misclassified as \textit{angry} or \textit{fear} even when spoken in a \textit{neutral} tone. The multimodal fusion model corrects this by providing the word identity, allowing the classifier to discount the phonetic onset energy.
+    \item \textbf{High-Valence Semantic Overlap (Multimodal Fusion Pipeline):} The few remaining errors in the late fusion model (accounting for the 0.62\% error rate) occur between \textit{happy} and \textit{pleasant surprise}. Both categories represent active, high-arousal, positive-valence emotions with overlapping fundamental frequency pitch heights and rising intonation contours. Since the semantic context of the carrier phrase is identical, the model occasionally struggles to draw a strict decision boundary between these two positive emotions.
+\end{enumerate}
 
 % --------------------------------------------------
 \subsection{Cluster Separability Visualization}
