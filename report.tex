@@ -67,7 +67,10 @@
 }
 
 \author{
-\textbf{Aaron Roy}
+\textbf{Aaron Roy}\\
+\vspace{1em}
+\textbf{Saintgits College of Engineering}
+
 }
 
 \date{\today}
@@ -96,17 +99,15 @@
 Human emotion recognition is an essential pillar in the development of intuitive and natural human-computer interaction (HCI) systems. However, relying on a single modality often introduces limitations, such as acoustic ambiguities in pure audio files or semantic sparsity in transcribed text. In this paper, we explore a multimodal framework for emotion classification using the Toronto Emotional Speech Set (TESS) dataset, evaluating three distinct pipeline variants: Speech-only, Text-only, and Multimodal Late Fusion. The Speech-only model relies on extracting 64-dimensional logarithmic Mel Spectrograms from 16 kHz resampled audio, which are sequentially modeled using a Bidirectional LSTM (BiLSTM) network to capture prosodic transitions (achieving 97.32\% classification accuracy). The Text-only baseline utilizes contextual embeddings extracted from the CLS token of a frozen pre-trained BERT transformer, highlighting the inherent limitation of carrier-phrase text structures which carry zero semantic emotional variance (yielding a near-random 13.48\% accuracy). To combine the strengths of both modalities, we implement a Late Fusion architecture that concatenates the 256-dimensional speech summary vector and the 768-dimensional text embedding. The resulting 1024-dimensional feature vector is passed to a classification head, yielding a state-of-the-art accuracy of 99.38\%. Our findings demonstrate that while the text transcripts lack direct emotional labels, they serve to resolve fine-grained acoustic confusions (e.g., distinguishing low-arousal sadness from disgust) by conditioning voice prosody on the literal identity of the spoken word.
 \end{abstract}
 
-\vspace{0.5em}
 
 \newpage
-\renewcommand{\contentsname}{Content}
+
 \tableofcontents
 \newpage
 
 % --------------------------------------------------
-% SECTION 1
-% --------------------------------------------------
 \section{Introduction}
+
 
 In modern human-computer interaction (HCI), automated emotion recognition plays a key role in developing natural, conversational agents. Traditionally, researchers have relied on speech prosody (e.g., pitch, intensity, and spectral features) to classify vocal emotions. However, unimodal speech systems struggle with acoustic overlaps in low-arousal states (like sadness and disgust) and variations across different speakers. Conversely, while text transcripts capture lexical sentiment, they lack paralinguistic tone and, in controlled settings like the Toronto Emotional Speech Set (TESS), contain uniform carrier phrases (e.g., ``Say the word [word]'') that carry zero semantic emotional cues on their own.
 
@@ -114,8 +115,20 @@ To address these limitations, multimodal machine learning integrates both modali
 
 In this work, we compare three deep learning architectures evaluated on the TESS dataset: (1) a Speech-Only model utilizing a Bidirectional LSTM over Mel Spectrograms (achieving 97.32\% accuracy); (2) a Text-Only model utilizing frozen BERT embeddings (yielding a random-guess baseline of 13.48\%); and (3) a Multimodal Late Fusion model combining both feature spaces. The fusion model achieves a classification accuracy of 99.38\%, proving that linguistic target context significantly reduces prosodic classification errors.
 
+
+In this work, we develop and compare three deep learning architectures to investigate the synergy between speech and text modalities on the TESS dataset:
+\begin{enumerate}
+    \item \textbf{Speech-Only Model:} A Bidirectional Long Short-Term Memory (BiLSTM) network trained on log Mel Spectrogram features to model temporal prosodic patterns.
+    \item \textbf{Text-Only Model:} A classifier trained on dense document embeddings extracted from the \texttt{[CLS]} token of a frozen pre-trained BERT (\texttt{bert-base-uncased}) model.
+    \item \textbf{Multimodal Late Fusion Model:} An architecture that concatenates the high-level features learned by the speech and text pipelines, passing them to a unified classification head.
+\end{enumerate}
+Our results show that while the text-only model performs at baseline random guessing (13.48\%), its integration in the multimodal model yields a classification accuracy of 99.38\%, significantly outperforming the speech-only model (97.32\%) and proving that lexical alignment helps resolve prosodic confusions.
+
 % --------------------------------------------------
 % SECTION 2
+
+\newpage
+
 % --------------------------------------------------
 \section{Architecture Decisions}
 
@@ -192,9 +205,8 @@ Each pipeline variant ends with:
 \end{itemize}
 
 The classifier predicts one of the seven emotion classes.
+\newpage
 
-% --------------------------------------------------
-% SECTION 3
 % --------------------------------------------------
 \section{Experiments and Performance}
 
@@ -253,10 +265,10 @@ Neutral & 0.99 & 0.10 & 1.00 \\
 \end{tabular}
 \end{table}
 
+\subsection{Performance Discussion}
 The per-emotion breakdown (Table~\ref{tab:per_emotion_f1}) reveals that high-arousal emotions (Angry, Fear) are easily classified via speech features alone, achieving a 1.00 F1-score. Low-arousal negative emotions (Disgust, Sad) show lower speech F1-scores (0.93 and 0.94, respectively) due to acoustic pitch similarities. Integrating the target vocabulary context via late fusion resolves these overlaps, pushing the F1-scores for Disgust and Sad to 0.99.
 
-% --------------------------------------------------
-% SECTION 4
+\newpage
 % --------------------------------------------------
 \section{Analysis}
 
@@ -353,11 +365,10 @@ t-SNE visualizations were generated to project high-dimensional embeddings into 
     \label{fig:confusion_matrices}
 \end{figure}
 
-% --------------------------------------------------
-% SECTION 5
+\newpage
+
 % --------------------------------------------------
 \section{Conclusion}
-
 In this work, we developed, evaluated, and compared three deep learning architectures for emotion recognition using the Toronto Emotional Speech Set (TESS) dataset, demonstrating the substantial benefits of multimodal learning in affective computing. While the Speech-only model (utilizing Mel Spectrograms and a Bidirectional LSTM) achieved a strong classification accuracy of 97.32\%, it exhibited performance bottlenecks in low-arousal emotional states (such as disgust and sadness) due to overlapping pitch and intensity characteristics. The Text-only model, bounded by the dataset's lexical design of uniform carrier phrases, performed at a random guessing baseline of 13.48\%, proving that linguistic text transcripts lack emotional semantics in isolation within controlled experimental conditions.
 
 By integrating both modalities via a Late Fusion architecture that concatenates the 256-dimensional temporal speech summary and the 768-dimensional contextual text embedding, the system achieved a near-perfect classification accuracy of \textbf{99.38\%}. This represents a substantial 77\% error rate reduction relative to the Speech-only unimodal baseline. t-SNE separability visualizations validated that the concatenated 1024-dimensional multimodal representation space forms highly compact, well-separated clusters across all seven emotion classes. Our findings confirm that textual context serves as a critical semantic anchor; although the text contains no direct emotional valence, it informs the classifier of the spoken target word's phonetic layout, allowing vocal prosody features to be interpreted condition-wise.
