@@ -368,9 +368,16 @@ t-SNE visualizations were generated to project high-dimensional embeddings into 
 % --------------------------------------------------
 \section{Conclusion}
 
-This work demonstrates that multimodal learning substantially improves emotion recognition performance on the TESS dataset. While acoustic modeling alone achieves strong performance, integrating contextual textual embeddings further reduces ambiguity and enhances class separability.
+In this work, we developed, evaluated, and compared three deep learning architectures for emotion recognition using the Toronto Emotional Speech Set (TESS) dataset, demonstrating the substantial benefits of multimodal learning in affective computing. While the Speech-only model (utilizing Mel Spectrograms and a Bidirectional LSTM) achieved a strong classification accuracy of 97.32\%, it exhibited performance bottlenecks in low-arousal emotional states (such as disgust and sadness) due to overlapping pitch and intensity characteristics. The Text-only model, bounded by the dataset's lexical design of uniform carrier phrases, performed at a random guessing baseline of 13.48\%, proving that linguistic text transcripts lack emotional semantics in isolation within controlled experimental conditions.
 
-The fusion architecture achieved a final accuracy of \textbf{99.38\%}, validating the effectiveness of combining temporal acoustic modeling with contextual language representations.
+By integrating both modalities via a Late Fusion architecture that concatenates the 256-dimensional temporal speech summary and the 768-dimensional contextual text embedding, the system achieved a near-perfect classification accuracy of \textbf{99.38\%}. This represents a substantial 77\% error rate reduction relative to the Speech-only unimodal baseline. t-SNE separability visualizations validated that the concatenated 1024-dimensional multimodal representation space forms highly compact, well-separated clusters across all seven emotion classes. Our findings confirm that textual context serves as a critical semantic anchor; although the text contains no direct emotional valence, it informs the classifier of the spoken target word's phonetic layout, allowing vocal prosody features to be interpreted condition-wise.
+
+Future research directions will explore:
+\begin{itemize}
+    \item \textbf{Fine-tuning the Text Encoder:} Unfreezing the pre-trained BERT parameters to learn domain-specific speech transcript vocabularies.
+    \item \textbf{Alternative Fusion Techniques:} Evaluating early fusion and cross-attention transformer fusion mechanisms to dynamically weight modalities at various layer depths.
+    \item \textbf{Real-World Generalization:} Evaluating the framework on spontaneous conversational datasets with natural dialogues, speaker variations, and background environmental noise to test robustness outside of controlled studio environments.
+\end{itemize}
 
 % --------------------------------------------------
 \end{document}
