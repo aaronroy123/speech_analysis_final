@@ -9,6 +9,15 @@ A deep learning system that recognizes human emotions from speech audio, text tr
 
 ---
 
+## ⚡ Quick Start / Execution Hint
+If you are looking to execute the code immediately:
+1. Go to the **[Setup & Installation Instructions](#-setup--installation-instructions)** to configure your Python environment.
+2. Download and prepare the dataset as outlined in **[Dataset Acquisition](#-dataset-acquisition)**.
+3. Run the scripts using the commands in **[Running the Pipelines](#-running-the-pipelines)** (using `run_all.sh` on Linux/macOS or the PowerShell commands on Windows).
+
+---
+
+
 ## 🌟 Key Features
 - **Speech Pipeline:** Uses raw audio resampled to 16 kHz $\rightarrow$ Mel-spectrogram extraction $\rightarrow$ Bidirectional LSTM (BiLSTM) sequence classifier.
 - **Text Pipeline:** Uses a frozen pre-trained **BERT (bert-base-uncased)** transformer model to extract contextual CLS token embeddings.
