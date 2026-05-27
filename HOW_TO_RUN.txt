@@ -1,71 +1,142 @@
-Multimodal Emotion Recognition System - How to Run
-==================================================
+================================================================================
+MULTIMODAL EMOTION RECOGNITION SYSTEM - DETAILED HOW TO RUN GUIDE
+================================================================================
 
-This repository contains a full end-to-end pipeline for a Multimodal Emotion Recognition system built using the Toronto emotional speech set (TESS) dataset.
+This document provides complete instructions for setting up the environment, preparing the dataset, and running the Multimodal Emotion Recognition system (Speech-Only, Text-Only, and late Fusion models) on all major platforms.
 
-The system combines two modalities using Late Fusion:
-1. Speech Pipeline: Mel-Spectrograms + Bidirectional LSTM (BiLSTM).
-2. Text Pipeline: Transcripts + Frozen BERT-base embeddings.
+--------------------------------------------------------------------------------
+1. PREREQUISITES
+--------------------------------------------------------------------------------
+- Python 3.8 to 3.12 installed on your system.
+- An internet connection to download the libraries and BERT model.
+- Git (optional, for cloning).
 
-Fusion accuracy: 99.38% overall accuracy.
+--------------------------------------------------------------------------------
+2. SETUP & INSTALLATION (OS-SPECIFIC CASES)
+--------------------------------------------------------------------------------
+First, clone the repository or extract the ZIP file, then open your terminal/command prompt and navigate into the project root directory:
 
----
-
-GETTING STARTED
----------------
-
-1. Prerequisites:
-   - Python 3.8+
-   - PyTorch-compatible environment
-
-2. Clone the Repository:
    git clone https://github.com/aaronroy123/speech_analysis_final.git
    cd speech_analysis_final
 
-3. Setup Virtual Environment & Dependencies:
-   # Create virtual environment
-   python -m venv .venv
+CASE A: macOS / Linux (Terminal)
+   # Create a virtual environment
+   python3 -m venv .venv
 
-   # Activate virtual environment
-   * On macOS/Linux:          source .venv/bin/activate
-   * On Windows (PowerShell): .\.venv\Scripts\Activate.ps1
-   * On Windows (CMD):        .\.venv\Scripts\activate.bat
+   # Activate the virtual environment
+   source .venv/bin/activate
 
-   # Install dependencies
+   # Upgrade pip and install dependencies
+   pip install --upgrade pip
    pip install -r requirements.txt
 
-4. Download the Dataset:
-   - Download the TESS dataset from Kaggle:
-     https://www.kaggle.com/datasets/ejlocurto/tess-toronto-emotional-speech-set-data
-   - Create a folder named "data" in the project root.
-   - Extract the dataset so that the path matches exactly:
-     data/TESS Toronto emotional speech set data/
+CASE B: Windows (PowerShell)
+   # Create a virtual environment
+   python -m venv .venv
 
----
+   # Activate the virtual environment
+   .\.venv\Scripts\Activate.ps1
+   # (If you get an execution policy error, run: Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass)
 
-RUNNING THE PROJECT
--------------------
+   # Upgrade pip and install dependencies
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
 
-Option A: Unified Runner (macOS/Linux)
+CASE C: Windows (Command Prompt / CMD)
+   # Create a virtual environment
+   python -m venv .venv
+
+   # Activate the virtual environment
+   .\.venv\Scripts\activate.bat
+
+   # Upgrade pip and install dependencies
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+
+--------------------------------------------------------------------------------
+3. DATASET ACQUISITION & PATH LAYOUT
+--------------------------------------------------------------------------------
+This project is evaluated on the Toronto Emotional Speech Set (TESS).
+
+1. Download the TESS dataset from the following Kaggle link:
+   https://www.kaggle.com/datasets/ejlocurto/tess-toronto-emotional-speech-set-data
+
+2. Create a folder named "data" in the project root directory.
+
+3. Extract the downloaded ZIP archive. Move the extracted folder named "TESS Toronto emotional speech set data" directly inside the "data" folder.
+
+   CRITICAL DIRECTORY STRUCTURE:
+   Your project directory must look exactly like this:
+   speech_analysis_final/
+   ├── data/
+   │   └── TESS Toronto emotional speech set data/
+   │       ├── OAF_angry/
+   │       ├── OAF_disgust/
+   │       ├── OAF_fear/
+   │       ├── OAF_happy/
+   │       ├── OAF_neutral/
+   │       ├── OAF_Pleasant_surprise/
+   │       ├── OAF_Sad/
+   │       ├── YAF_angry/
+   │       └── ... (and so on)
+   ├── models/
+   ├── Results/
+   └── HOW_TO_RUN.txt
+
+   TROUBLESHOOTING NESTED FOLDERS:
+   Sometimes ZIP extractors create double folders (e.g. data/TESS.../TESS...).
+   Ensure that the subdirectory folders (like OAF_angry) are exactly one level 
+   under "TESS Toronto emotional speech set data".
+
+--------------------------------------------------------------------------------
+4. RUNNING THE PIPELINES
+--------------------------------------------------------------------------------
+
+CASE 1: Automated Run (macOS / Linux / Git Bash on Windows)
+   If you have a bash environment, you can run all training and test pipelines
+   sequentially using a single command:
+
    chmod +x run_all.sh
    ./run_all.sh
 
-Option B: Manual Pipeline Commands (Windows/Manual)
-   # 1. Speech Pipeline
-   python models/speech_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data"
-   python models/speech_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+CASE 2: Manual Run (Windows CMD, PowerShell, or step-by-step execution)
+   If running manually or on Windows, execute the commands sequentially.
 
-   # 2. Text Pipeline
-   python models/text_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data"
-   python models/text_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+   *Note: If your system uses 'python3' as the default command instead of 'python', 
+   replace 'python' with 'python3' in the commands below.*
 
-   # 3. Fusion Pipeline
-   python models/fusion_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data"
-   python models/fusion_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+   STEP 1: Speech-Only Pipeline (Mel-Spectrograms + BiLSTM)
+      # Train the speech model (default: 10 epochs)
+      python models/speech_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data" --epochs 10
+      
+      # Evaluate the speech model on the test split
+      python models/speech_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
 
----
+   STEP 2: Text-Only Pipeline (BERT Contextual Embeddings + Classifier)
+      # Train the text model (default: 10 epochs)
+      python models/text_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data" --epochs 10
+      
+      # Evaluate the text model on the test split
+      python models/text_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
 
-OUTPUTS & ARTIFACTS
--------------------
-- Performance logs: Results/accuracy_tables.md
-- t-SNE & Confusion Matrices: Results/plots/
+   STEP 3: Multimodal Late Fusion Pipeline (Speech + Text Combined)
+      # Train the fusion model classifier (requires pre-trained speech/text model weights)
+      python models/fusion_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data" --epochs 10
+      
+      # Evaluate the multimodal fusion model on the test split
+      python models/fusion_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+
+--------------------------------------------------------------------------------
+5. RESULTS & OUTPUTS VERIFICATION
+--------------------------------------------------------------------------------
+Once the execution of all pipelines completes:
+- The comparative accuracy of all models will be logged in:
+  Results/accuracy_tables.md
+- The generated t-SNE scatter plots showing features clustering, as well as the 
+  model confusion matrices, will be saved in:
+  Results/plots/ (e.g. speech_tsne.png, fusion_confusion_matrix.png, etc.)
+- The trained model weight files will be saved in:
+  models/speech_pipeline/weights/speech_model.pth
+  models/text_pipeline/weights/text_model.pth
+  models/fusion_pipeline/weights/fusion_model.pth
+================================================================================
