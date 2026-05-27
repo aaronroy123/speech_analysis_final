@@ -1,5 +1,7 @@
 # Multimodal Emotion Recognition System Report
 
+> **Execution Hint:** Step-by-step instructions on how to set up the environment, download the dataset, and execute the training/evaluation pipelines are provided in the [README.md](README.md) and [HOW_TO_RUN.txt](HOW_TO_RUN.txt) files at the root of the project repository.
+
 ## A. Architecture Decisions
 
 ### 1. Preprocessing

@@ -1,0 +1,46 @@
+SPEECH EMOTION ANALYSIS PROJECT - HOW TO RUN INSTRUCTIONS
+=========================================================
+
+This project contains three pipelines: Speech-Only (BiLSTM), Text-Only (BERT), and Multimodal Late Fusion.
+
+For full step-by-step instructions with folder structure diagrams, please read the README.md file on the front page of the GitHub repository.
+
+QUICK START INSTRUCTIONS:
+
+1. Environment Setup (Python 3.12 is recommended):
+   - Open your terminal or PowerShell.
+   - Create a virtual environment:
+     python -m venv .venv
+   - Activate the virtual environment:
+     * On Windows (PowerShell):  .\.venv\Scripts\Activate.ps1
+     * On Windows (CMD):         .\.venv\Scripts\activate.bat
+     * On macOS/Linux:           source .venv/bin/activate
+   - Install dependencies:
+     pip install -r requirements.txt
+
+2. Download TESS Dataset:
+   - Download the TESS dataset from Kaggle:
+     https://www.kaggle.com/datasets/ejlocurto/tess-toronto-emotional-speech-set-data
+   - Create a folder named "data" in the project root.
+   - Extract the downloaded ZIP file and place the folder "TESS Toronto emotional speech set data" inside the "data" directory.
+   - The path to the folders must look like:
+     data/TESS Toronto emotional speech set data/OAF_angry/
+     data/TESS Toronto emotional speech set data/OAF_disgust/
+     ... etc.
+
+3. Execute the Pipelines:
+   - On Windows (PowerShell):
+     python models/speech_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data"
+     python models/speech_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+     python models/text_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data"
+     python models/text_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+     python models/fusion_pipeline/train.py --data_dir "data/TESS Toronto emotional speech set data"
+     python models/fusion_pipeline/test.py --data_dir "data/TESS Toronto emotional speech set data"
+
+   - On macOS/Linux:
+     chmod +x run_all.sh
+     ./run_all.sh
+
+4. Find Output Visualizations & Accuracy Tables:
+   - Comparative accuracy logs: Results/accuracy_tables.md
+   - Generated t-SNE scatter plots and Confusion Matrices: Results/plots/
