@@ -68,10 +68,14 @@
 
 \author{
 \textbf{AARON ROY}\\
-\vspace{1em}
-\textbf{Saintgits College of Engineering}
-
+\vspace{0.5em}
+\textbf{Saintgits College of Engineering}\\
+\vspace{0.5em}
+\textbf{Project Repository:}\\
+\href{https://github.com/aaronroy123/speech_analysis_final}
+{GitHub - Speech Emotion Analysis Project}
 }
+
 
 \date{\today}
 
@@ -287,23 +291,23 @@ However, multimodal late fusion increased performance from 97.32\% to \textbf{99
 
 \subsection{Error Analysis and Failure Cases}
 
-To establish a rigorous diagnostic baseline, we analyze the performance limits of the models across the 1,120 test samples, identifying concrete failure modes and their physical or acoustic origins:
+To establish a rigorous diagnostic baseline, we analyze the performance limits of the models and identify concrete failure modes and their acoustic origins:
 
 \begin{enumerate}
-    \item \textbf{Low-Arousal Acoustic Overlap (Speech-Only Pipeline):} 
-    The Speech-Only model yielded 30 classification errors, 18 of which (60\%) involved confusing \textit{sadness} with \textit{disgust}. Representative examples include files like \texttt{YAF\_tool\_sad.wav}, \texttt{YAF\_hurl\_sad.wav}, \texttt{OAF\_dog\_sad.wav}, and \texttt{OAF\_keg\_sad.wav} which were misclassified as disgust. Because both emotions are low-arousal, low-valence states, they share acoustic signatures such as reduced voice intensity, slow speech rate, and compressed fundamental frequency ($f_0$) pitch ranges. Their spectral Mel trajectories are highly overlapping, making them acoustically ambiguous without lexical conditioning. Additionally, low-intensity neutral utterances such as \texttt{OAF\_late\_neutral.wav} and \texttt{OAF\_name\_neutral.wav} were predicted as disgust.
-    
-    \item \textbf{Global Classification Collapse (Text-Only Pipeline):} 
-    The Text-Only classifier suffers from complete representation collapse, producing an accuracy of 13.48\% (equivalent to random guessing). Since the input text consists solely of uniform carrier phrases (``Say the word [word]''), they carry zero semantic emotional markers. Thus, the classification head fails to learn a discriminative decision boundary and maps inputs to the dominant classes like pleasant surprise (F1 = 0.23) and neutral (F1 = 0.10).
-    
-    \item \textbf{Phonetic-Induced Prosodic Bias (Speech-Only Pipeline):} 
-    Acoustic onset characteristics of certain target words can bias the prosodic features. For example, the file \texttt{YAF\_came\_sad.wav} was misclassified as happy. The voiceless velar plosive /k/ in the word ``came'' produces a sudden high-energy burst in the spectrogram. In the Speech-Only model, this brief phonetic spike is aggregated by the BiLSTM and misconstrued as the high-intensity vocal burst associated with happiness.
-    
-    \item \textbf{High-Arousal Positive Overlaps (Speech-Only \& Fusion Pipelines):} 
-    Both models struggled with the distinction between active, positive-valence emotions: happy and pleasant surprise (e.g., in Speech-only, \texttt{OAF\_choice\_ps.wav} and \texttt{OAF\_hurl\_ps.wav} predicted as happy; \texttt{OAF\_hire\_happy.wav} predicted as pleasant surprise; in Fusion, \texttt{OAF\_nag\_happy.wav} and \texttt{OAF\_hire\_happy.wav} predicted as pleasant surprise). Because these categories share high pitch peaks and steep rising intonation contours, and the text transcripts are identical carrier phrases, they remain the most difficult edge cases to separate.
-    
-    \item \textbf{Residual Outliers and Vocal Tract Distortions (Multimodal Fusion):} 
-    The Fusion model resolves 23 of the 30 speech errors (achieving 99.38\% accuracy) but leaves 7 residual errors. Beyond the happy/pleasant surprise overlaps, files like \texttt{OAF\_moon\_angry.wav} and \texttt{OAF\_rush\_disgust.wav} were misclassified as pleasant surprise. In \texttt{OAF\_moon\_angry.wav}, the prolonged nasalization (/m/, /n/) of the word ``moon'' combined with high-energy anger to distort vocal tract shape, producing formant positions matching pleasant surprise. For \texttt{OAF\_rush\_disgust.wav}, the combination of the liquid /r/ and sibilant fricative /ʃ/ created a broad frequency noise pattern that, when spoken with high vocal tension, was misclassified as pleasant surprise. Additionally, the low-arousal samples \texttt{YAF\_rough\_sad.wav} and \texttt{YAF\_rose\_sad.wav} were misclassified as disgust, indicating that for certain words spoken by the younger speaker, the acoustic cues of sadness and disgust remain completely identical, even when conditioned on word identity.
+    \item \textbf{Low-Arousal Acoustic Overlap:}
+    The Speech-Only model produced most of its errors by confusing \textit{sadness} with \textit{disgust}. Representative examples include files such as \texttt{YAF\_tool\_sad.wav}, \texttt{YAF\_hurl\_sad.wav}, \texttt{OAF\_dog\_sad.wav}, and \texttt{OAF\_keg\_sad.wav}, which were misclassified as disgust. Since both emotions are low-arousal and low-valence states, they share acoustic features such as reduced voice intensity, slower speech rate, and compressed pitch range.
+
+    \item \textbf{Text-Only Classification Collapse:}
+    The Text-Only classifier performs close to random guessing because the input text consists mainly of uniform carrier phrases such as ``Say the word [word]''. These phrases do not contain direct emotional meaning, so the classifier fails to learn a strong discriminative boundary.
+
+    \item \textbf{Phonetic-Induced Prosodic Bias:}
+    Certain target words can influence acoustic features. For example, \texttt{YAF\_came\_sad.wav} may be misclassified as happy because the hard /k/ sound in ``came'' creates a short high-energy burst in the spectrogram, which can resemble high-intensity emotional speech.
+
+    \item \textbf{High-Arousal Positive Overlap:}
+    Both happy and pleasant surprise contain high pitch peaks and rising intonation patterns. As a result, files such as \texttt{OAF\_choice\_ps.wav}, \texttt{OAF\_hurl\_ps.wav}, and \texttt{OAF\_hire\_happy.wav} may be confused between these two classes.
+
+    \item \textbf{Residual Fusion Errors:}
+    The Multimodal Fusion model resolves most speech-only errors, but a few difficult cases remain. Examples such as \texttt{OAF\_moon\_angry.wav}, \texttt{OAF\_rush\_disgust.wav}, \texttt{YAF\_rough\_sad.wav}, and \texttt{YAF\_rose\_sad.wav} show that some words still produce acoustic patterns that overlap across emotion classes, even after text conditioning.
 \end{enumerate}
 
 % --------------------------------------------------
@@ -323,7 +327,6 @@ t-SNE visualizations were generated to project high-dimensional embeddings into 
 \end{itemize}
 
 % --------------------------------------------------
-\clearpage
 
 \begin{figure}[H]
     \centering
@@ -400,6 +403,8 @@ Future research directions will explore:
     \item J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, ``BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding,'' 2019.
     \item S. Hochreiter and J. Schmidhuber, ``Long Short-Term Memory,'' Neural Computation, 1997.
     \item L. van der Maaten and G. Hinton, ``Visualizing Data using t-SNE,'' Journal of Machine Learning Research, 2008.
+    \item \textbf{Project Repository:}
+\href{https://github.com/aaronroy123/speech_analysis_final}{GitHub - Speech Emotion Analysis Project}
 \end{enumerate}
 
 % --------------------------------------------------
